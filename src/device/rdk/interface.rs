@@ -5,9 +5,10 @@ use futures::executor::block_on;
 use futures_util::stream::StreamExt;
 use futures_util::SinkExt;
 use lazy_static::lazy_static;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{de::DeserializeOwned, de::Visitor, Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 use serde_json::json;
+use std::fmt;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
@@ -20,6 +21,68 @@ use tokio_tungstenite::{
     connect_async, tungstenite::protocol::Message, MaybeTlsStream, WebSocketStream,
 };
 use url::Url;
+
+// Custom deserializer that accepts both strings and numbers, converting numbers to strings.
+// This is useful for APIs that may return integer values (like 0) for fields that are expected to be strings.
+// When used with Option<String> fields, this function returns Option<String> to handle the Option wrapper.
+pub fn deserialize_string_or_number<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct StringOrNumberVisitor;
+
+    impl<'de> Visitor<'de> for StringOrNumberVisitor {
+        type Value = Option<String>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a string, a number, or null")
+        }
+
+        fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(Some(value.to_string()))
+        }
+
+        fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(Some(value.to_string()))
+        }
+
+        fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(Some(value.to_string()))
+        }
+
+        fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(Some(value.to_string()))
+        }
+
+        fn visit_none<E>(self) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(None)
+        }
+
+        fn visit_unit<E>(self) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(None)
+        }
+    }
+
+    deserializer.deserialize_any(StringOrNumberVisitor)
+}
 
 static mut DEVICE_ADDRESS: String = String::new();
 static mut DEBUG: bool = false;
