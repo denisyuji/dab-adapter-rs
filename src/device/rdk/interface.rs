@@ -453,7 +453,6 @@ lazy_static! {
             keycode_map.insert(String::from("KEY_LEFT"),37);
             keycode_map.insert(String::from("KEY_ENTER"),13);
             keycode_map.insert(String::from("KEY_BACK"),8);
-            keycode_map.insert(String::from("KEY_PLAY"),13);
             keycode_map.insert(String::from("KEY_PLAY_PAUSE"),227);
             keycode_map.insert(String::from("KEY_PAUSE"),19);
             keycode_map.insert(String::from("KEY_REWIND"),224);

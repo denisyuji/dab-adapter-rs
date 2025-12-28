@@ -83,7 +83,7 @@ fn set_rdk_resolution(resolution: &OutputResolution) -> Result<(), DabError> {
     Ok(())
 }
 
-fn set_rdk_audio_volume(volume: u32) -> Result<(), DabError> {
+pub fn set_rdk_audio_volume(volume: u32) -> Result<(), DabError> {
 
     let range = get_audio_volume_range();
     if !(range.min..=range.max).contains(&volume) {
@@ -108,7 +108,7 @@ fn set_rdk_audio_volume(volume: u32) -> Result<(), DabError> {
     Ok(())
 }
 
-fn set_rdk_mute(mute: bool) -> Result<(), DabError> {
+pub fn set_rdk_mute(mute: bool) -> Result<(), DabError> {
     #[allow(non_snake_case)]
     #[derive(Serialize)]
     struct Param {
