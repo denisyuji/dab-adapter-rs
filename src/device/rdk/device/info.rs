@@ -8,8 +8,9 @@ use crate::dab::structs::NetworkInterface;
 use crate::dab::structs::NetworkInterfaceType;
 use crate::device::rdk::interface::get_device_id;
 use crate::device::rdk::interface::http_post;
-use crate::device::rdk::interface::{get_rdk_device_info, get_thunder_property};
+use crate::device::rdk::interface::{deserialize_string_or_number, get_rdk_device_info, get_thunder_property};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
@@ -143,6 +144,21 @@ pub fn process(_dab_request: DeviceInfoRequest) -> Result<String, DabError> {
     };
 
     //######### Correlate Fields #########
+    // Sort interfaces to prioritize connected ones, with Ethernet before WiFi
+    Interfaces.result.interfaces.sort_by(|a, b| {
+        match (a.connected, b.connected) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => {
+                // If both connected or both disconnected, prioritize Ethernet over WiFi
+                match (a.interface.as_str(), b.interface.as_str()) {
+                    ("ETHERNET", "WIFI") => std::cmp::Ordering::Less,
+                    ("WIFI", "ETHERNET") => std::cmp::Ordering::Greater,
+                    _ => std::cmp::Ordering::Equal,
+                }
+            }
+        }
+    });
 
     for iface in Interfaces.result.interfaces.iter_mut() {
         let mut interface = NetworkInterface {
@@ -158,6 +174,13 @@ pub fn process(_dab_request: DeviceInfoRequest) -> Result<String, DabError> {
 
         interface.connected = iface.connected;
         interface.macAddress = iface.macAddress.clone();
+        
+        // Only get IP settings for connected interfaces
+        if !iface.connected {
+            ResponseOperator.networkInterfaces.push(interface);
+            continue;
+        }
+        
         // #########org.rdk.Network.getIPSettings#########
 
         #[derive(Serialize)]
@@ -192,22 +215,60 @@ pub fn process(_dab_request: DeviceInfoRequest) -> Result<String, DabError> {
         }
 
         #[derive(Deserialize)]
+        #[serde(default)]
         struct GetIPSettingsResult {
             pub interface: Option<String>,
             pub ipversion: Option<String>,
             pub autoconfig: Option<bool>,
+            #[serde(deserialize_with = "deserialize_string_or_number")]
             pub ipaddr: Option<String>, // maps to `ipAddress`
+            #[serde(deserialize_with = "deserialize_string_or_number")]
             pub netmask: Option<String>,
+            #[serde(deserialize_with = "deserialize_string_or_number")]
             pub gateway: Option<String>,
+            #[serde(deserialize_with = "deserialize_string_or_number")]
             pub primarydns: Option<String>,
+            #[serde(deserialize_with = "deserialize_string_or_number")]
             pub secondarydns: Option<String>,
             pub success: bool,
+        }
+
+        impl Default for GetIPSettingsResult {
+            fn default() -> Self {
+                GetIPSettingsResult {
+                    interface: None,
+                    ipversion: None,
+                    autoconfig: None,
+                    ipaddr: None,
+                    netmask: None,
+                    gateway: None,
+                    primarydns: None,
+                    secondarydns: None,
+                    success: false,
+                }
+            }
         }
 
         let json_string = serde_json::to_string(&request).unwrap();
         let response = http_post(json_string)?;
 
-        let IPSettings: GetIPSettingsResponse = serde_json::from_str(&response).unwrap();
+        // Check if the response indicates failure before deserializing
+        let response_value: serde_json::Value = serde_json::from_str(&response)
+            .map_err(|e| DabError::Err500(format!("Failed to parse IP settings response: {}", e)))?;
+        
+        if response_value.get("result")
+            .and_then(|r| r.get("success"))
+            .and_then(|s| s.as_bool())
+            == Some(false)
+        {
+            // If success is false, skip IP settings but still add the interface
+            ResponseOperator.networkInterfaces.push(interface);
+            continue;
+        }
+
+        let IPSettings: GetIPSettingsResponse = serde_json::from_str(&response)
+            .map_err(|e| DabError::Err500(format!("Failed to parse IP settings response: {}", e)))?;
+        
         if let Some(ipaddr) = IPSettings.result.ipaddr {
             interface.ipAddress = ipaddr;
         }
