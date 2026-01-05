@@ -797,7 +797,7 @@ pub fn get_supported_languages() -> Vec<String> {
     SETTINGS
         .supported_languages
         .clone()
-        .unwrap_or_else(|| vec![String::from("en-US")])
+        .unwrap_or_else(|| vec![String::from("en_US"), String::from("es_US")])
 }
 
 pub fn get_audio_volume_range() -> AudioVolume {
