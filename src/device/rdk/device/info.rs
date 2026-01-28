@@ -207,48 +207,6 @@ pub fn process(_dab_request: DeviceInfoRequest) -> Result<String, DabError> {
             params: req_params,
         };
 
-        #[derive(Deserialize)]
-        struct GetIPSettingsResponse {
-            jsonrpc: String,
-            id: i32,
-            result: GetIPSettingsResult,
-        }
-
-        #[derive(Deserialize)]
-        #[serde(default)]
-        struct GetIPSettingsResult {
-            pub interface: Option<String>,
-            pub ipversion: Option<String>,
-            pub autoconfig: Option<bool>,
-            #[serde(deserialize_with = "deserialize_string_or_number")]
-            pub ipaddr: Option<String>, // maps to `ipAddress`
-            #[serde(deserialize_with = "deserialize_string_or_number")]
-            pub netmask: Option<String>,
-            #[serde(deserialize_with = "deserialize_string_or_number")]
-            pub gateway: Option<String>,
-            #[serde(deserialize_with = "deserialize_string_or_number")]
-            pub primarydns: Option<String>,
-            #[serde(deserialize_with = "deserialize_string_or_number")]
-            pub secondarydns: Option<String>,
-            pub success: bool,
-        }
-
-        impl Default for GetIPSettingsResult {
-            fn default() -> Self {
-                GetIPSettingsResult {
-                    interface: None,
-                    ipversion: None,
-                    autoconfig: None,
-                    ipaddr: None,
-                    netmask: None,
-                    gateway: None,
-                    primarydns: None,
-                    secondarydns: None,
-                    success: false,
-                }
-            }
-        }
-
         let json_string = serde_json::to_string(&request).unwrap();
         let response = http_post(json_string)?;
 
@@ -266,17 +224,26 @@ pub fn process(_dab_request: DeviceInfoRequest) -> Result<String, DabError> {
             continue;
         }
 
-        let IPSettings: GetIPSettingsResponse = serde_json::from_str(&response)
-            .map_err(|e| DabError::Err500(format!("Failed to parse IP settings response: {}", e)))?;
-        
-        if let Some(ipaddr) = IPSettings.result.ipaddr {
-            interface.ipAddress = ipaddr;
-        }
+        // Safely extract IP address and DNS entries from the dynamic JSON, accepting
+        // both strings and numbers (which are converted to strings).
+        let to_string = |v: &Value| -> Option<String> {
+            match v {
+                Value::String(s) => Some(s.clone()),
+                Value::Number(n) => Some(n.to_string()),
+                _ => None,
+            }
+        };
 
-        for dnsparam in [IPSettings.result.primarydns, IPSettings.result.secondarydns] {
-            if let Some(dns) = dnsparam {
-                if !dns.is_empty() {
-                    interface.dns.push(dns)
+        if let Some(result) = response_value.get("result") {
+            if let Some(v) = result.get("ipaddr").and_then(to_string) {
+                interface.ipAddress = v;
+            }
+
+            for key in ["primarydns", "secondarydns"] {
+                if let Some(dns) = result.get(key).and_then(to_string) {
+                    if !dns.is_empty() {
+                        interface.dns.push(dns);
+                    }
                 }
             }
         }
