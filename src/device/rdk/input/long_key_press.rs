@@ -30,6 +30,11 @@ pub fn process(_dab_request: LongKeyPressRequest) -> Result<String, DabError> {
 
     let mut KeyCode: u16;
 
+    match _dab_request.keyCode.as_str() {
+        "KEY_FAST_FORWARD" => return Err(DabError::Err400("'KEY_FAST_FORWARD' not supported".to_string())),
+        _ => {}
+    }
+
     match get_keycode(_dab_request.keyCode.clone()) {
         Some(k) => KeyCode = *k,
         None => return Err(DabError::Err400("keyCode' not found".to_string())),
