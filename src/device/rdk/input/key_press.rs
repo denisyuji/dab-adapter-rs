@@ -3,45 +3,12 @@ use crate::dab::structs::KeyPressRequest;
 use crate::dab::structs::KeyPressResponse;
 use crate::device::rdk::interface::get_keycode;
 use crate::device::rdk::interface::http_post;
-use crate::device::rdk::interface::rdk_request;
-use crate::device::rdk::interface::RdkResponse;
+use crate::device::rdk::input::key::{get_focused_client, needs_direct_injection};
 use crate::device::rdk::system::settings::get::{get_rdk_audio_volume, get_rdk_mute};
 use crate::device::rdk::system::settings::set::{set_rdk_audio_volume, set_rdk_mute};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 const VOLUME_STEP: u32 = 5;
-
-// Keys that need to be sent directly to the focused app via generateKey
-// to bypass platform-level key intercepts
-fn needs_direct_injection(key_code: &str) -> bool {
-    matches!(key_code, "KEY_VOLUME_UP" | "KEY_VOLUME_DOWN" | "KEY_MUTE")
-}
-
-// Check if a client is a system/overlay client that should be skipped
-fn is_system_client(client: &str) -> bool {
-    client.starts_with("subtec_")
-        || client.starts_with("test-")
-        || client == "rdkshell_display"
-}
-
-// Get the focused app client (first non-system client in Z order)
-fn get_focused_client() -> Option<String> {
-    #[allow(dead_code)]
-    #[derive(Deserialize)]
-    struct GetZOrderResult {
-        clients: Vec<String>,
-        success: bool,
-    }
-
-    match rdk_request::<RdkResponse<GetZOrderResult>>("org.rdk.RDKShell.1.getZOrder") {
-        Ok(response) => response
-            .result
-            .clients
-            .into_iter()
-            .find(|c| !is_system_client(c)),
-        Err(_) => None,
-    }
-}
 
 #[allow(non_snake_case)]
 pub fn process(_dab_request: KeyPressRequest) -> Result<String, DabError> {
@@ -75,7 +42,7 @@ pub fn process(_dab_request: KeyPressRequest) -> Result<String, DabError> {
 
     let KeyCode: u16 = match get_keycode(_dab_request.keyCode.clone()) {
         Some(k) => *k,
-        None => return Err(DabError::Err400("keyCode' not found".to_string())),
+        None => return Err(DabError::Err400("keyCode not found".to_string())),
     };
 
     // For volume keys and other intercepted keys, use generateKey with client parameter
