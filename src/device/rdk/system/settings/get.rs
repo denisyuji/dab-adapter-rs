@@ -39,6 +39,24 @@ fn get_frequency_from_displayinfo_framerate(
     framerate.parse::<f32>()
 }
 
+/// Normalize platform framerate to DAB nominal value so set-then-get matches (e.g. 59.94 → 60).
+fn normalize_frequency_for_dab(frequency: f32) -> f32 {
+    const TOLERANCE: f32 = 0.1;
+    const NOMINAL: [(f32, f32); 5] = [
+        (23.976, 24.0),
+        (29.97, 30.0),
+        (47.952, 48.0),
+        (59.94, 60.0),
+        (119.88, 120.0),
+    ];
+    for (actual, nominal) in NOMINAL {
+        if (frequency - actual).abs() < TOLERANCE {
+            return nominal;
+        }
+    }
+    frequency
+}
+
 fn get_displaysettings_resolution_widthheight() -> Result<(u32, u32), DabError> {
     #[allow(non_snake_case)]
     #[allow(dead_code)]
@@ -72,6 +90,7 @@ fn get_rdk_video_resolution() -> Result<OutputResolution, DabError> {
     let displayinfo_framerate = get_thunder_property("DisplayInfo.framerate", "")?;
     let frequency = get_frequency_from_displayinfo_framerate(&displayinfo_framerate)
         .map_err(|_| DabError::Err400("Invalid framerate(parse to f32 failed)".to_string()))?;
+    let frequency = normalize_frequency_for_dab(frequency);
 
     Ok(OutputResolution {
         width,
