@@ -2,10 +2,12 @@ use crate::dab::structs::AudioOutputMode;
 use crate::dab::structs::AudioOutputSource;
 use crate::dab::structs::DabError;
 use crate::dab::structs::HdrOutputMode;
+use crate::dab::structs::MatchContentFrameRate;
 use crate::dab::structs::OutputResolution;
 use crate::dab::structs::SetSystemSettingsRequest;
 use crate::dab::structs::VideoInputSource;
 use crate::device::rdk::interface::rdk_request_with_params;
+use crate::device::rdk::interface::service_is_available;
 use crate::device::rdk::interface::RdkResponseSimple;
 use crate::device::rdk::system::settings::get::set_current_video_input_source;
 
@@ -284,6 +286,49 @@ fn set_rdk_video_input_source(source: VideoInputSource) -> Result<(), DabError> 
     Ok(())
 }
 
+fn set_rdk_match_content_frame_rate(mode: MatchContentFrameRate) -> Result<(), DabError> {
+    // If the platform does not expose the FrameRate plugin, keep EnabledAlways as a no-op
+    // because list currently advertises it as the only supported option.
+    let frame_rate_available = match service_is_available("org.rdk.FrameRate") {
+        Ok(is_available) => is_available,
+        Err(_) => false,
+    };
+
+    if !frame_rate_available {
+        return match mode {
+            MatchContentFrameRate::EnabledAlways => Ok(()),
+            _ => Err(DabError::Err400(
+                "Setting 'matchContentFrameRate' is not supported".to_string(),
+            )),
+        };
+    }
+
+    #[derive(Serialize)]
+    struct Param {
+        frmmode: u8,
+    }
+
+    let desired = match mode {
+        MatchContentFrameRate::Disabled => 0,
+        MatchContentFrameRate::EnabledAlways | MatchContentFrameRate::EnabledSeamlessOnly => 1,
+    };
+
+    match rdk_request_with_params::<Param, RdkResponseSimple>(
+        "org.rdk.FrameRate.setFrmMode",
+        Param { frmmode: desired },
+    ) {
+        Ok(_) => Ok(()),
+        // Keep EnabledAlways as a successful no-op only when backend path is unavailable.
+        Err(DabError::Err500(error))
+            if matches!(mode, MatchContentFrameRate::EnabledAlways)
+                && error.contains("ERROR_UNAVAILABLE") =>
+        {
+            Ok(())
+        }
+        Err(err) => Err(err),
+    }
+}
+
 pub fn process(_dab_request: SetSystemSettingsRequest) -> Result<String, DabError> {
     let _packet = serde_json::to_string(&_dab_request).unwrap();
     let mut json_map: HashMap<&str, Value> = serde_json::from_str(&_packet).unwrap();
@@ -314,6 +359,9 @@ pub fn process(_dab_request: SetSystemSettingsRequest) -> Result<String, DabErro
             "videoInputSource" => set_rdk_video_input_source(serde_json::from_value::<
                 VideoInputSource,
             >(value.take()).unwrap())?,
+            "matchContentFrameRate" => set_rdk_match_content_frame_rate(
+                serde_json::from_value::<MatchContentFrameRate>(value.take()).unwrap(),
+            )?,
             "pictureMode" | "lowLatencyMode" | _ => {
                 return Err(DabError::Err400(format!(
                     "Setting '{}' is not supported",
