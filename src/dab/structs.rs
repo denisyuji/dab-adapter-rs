@@ -327,7 +327,7 @@ pub enum AudioOutputSource {
 }
 
 #[allow(dead_code)]
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub enum VideoInputSource {
     Tuner,
     HDMI1,
