@@ -210,17 +210,7 @@ pub fn process(_dab_request: ListSystemSettingsRequest) -> Result<String, DabErr
     ];
     ResponseOperator.audioOutputMode = get_rdk_audio_output_modes()?;
     ResponseOperator.audioOutputSource = get_rdk_supported_audio_source()?;
-    ResponseOperator.videoInputSource = vec![
-        //VideoInputSource::Tuner,
-        // VideoInputSource::HDMI1,
-        // VideoInputSource::HDMI2,
-        // VideoInputSource::HDMI3,
-        // VideoInputSource::HDMI4,
-        // VideoInputSource::Composite,
-        // VideoInputSource::Component,
-        VideoInputSource::Home,
-        // VideoInputSource::Cast,
-    ];
+    ResponseOperator.videoInputSource = vec![VideoInputSource::Home];
 
     // *******************************************************************
     Ok(serde_json::to_string(&ResponseOperator).unwrap())

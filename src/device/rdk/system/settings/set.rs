@@ -4,8 +4,10 @@ use crate::dab::structs::DabError;
 use crate::dab::structs::HdrOutputMode;
 use crate::dab::structs::OutputResolution;
 use crate::dab::structs::SetSystemSettingsRequest;
+use crate::dab::structs::VideoInputSource;
 use crate::device::rdk::interface::rdk_request_with_params;
 use crate::device::rdk::interface::RdkResponseSimple;
+use crate::device::rdk::system::settings::get::set_current_video_input_source;
 
 use crate::device::rdk::system::settings::get::get_rdk_audio_port;
 use crate::device::rdk::system::settings::get::get_rdk_hdr_current_setting;
@@ -268,6 +270,20 @@ fn set_rdk_text_to_speech(val: bool) -> Result<(), DabError> {
     Ok(())
 }
 
+fn set_rdk_video_input_source(source: VideoInputSource) -> Result<(), DabError> {
+    match source {
+        VideoInputSource::Home => {
+            set_current_video_input_source(VideoInputSource::Home);
+        }
+        _ => {
+            return Err(DabError::Err400(
+                "videoInputSource: only Home is supported".to_string(),
+            ));
+        }
+    }
+    Ok(())
+}
+
 pub fn process(_dab_request: SetSystemSettingsRequest) -> Result<String, DabError> {
     let _packet = serde_json::to_string(&_dab_request).unwrap();
     let mut json_map: HashMap<&str, Value> = serde_json::from_str(&_packet).unwrap();
@@ -295,7 +311,10 @@ pub fn process(_dab_request: SetSystemSettingsRequest) -> Result<String, DabErro
                 set_rdk_hdr_mode(serde_json::from_value::<HdrOutputMode>(value.take()).unwrap())?
             }
             "textToSpeech" => set_rdk_text_to_speech(value.take().as_bool().unwrap())?,
-            "pictureMode" | "videoInputSource" | "lowLatencyMode" | _ => {
+            "videoInputSource" => set_rdk_video_input_source(serde_json::from_value::<
+                VideoInputSource,
+            >(value.take()).unwrap())?,
+            "pictureMode" | "lowLatencyMode" | _ => {
                 return Err(DabError::Err400(format!(
                     "Setting '{}' is not supported",
                     key
