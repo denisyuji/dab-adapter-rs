@@ -13,6 +13,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::io::Write;
+use std::sync::OnceLock;
 use std::{thread, time};
 use surf::Client;
 use tokio::net::TcpStream;
@@ -84,16 +85,14 @@ where
     deserializer.deserialize_any(StringOrNumberVisitor)
 }
 
-static mut DEVICE_ADDRESS: String = String::new();
-static mut DEBUG: bool = false;
+static DEVICE_ADDRESS: OnceLock<String> = OnceLock::new();
+static DEBUG: OnceLock<bool> = OnceLock::new();
 
 pub fn init(device_ip: &str, debug: bool) {
-    unsafe {
-        DEVICE_ADDRESS.push_str(&device_ip);
-        DEBUG = debug;
-    }
+    let _ = DEVICE_ADDRESS.set(device_ip.to_string());
+    let _ = DEBUG.set(debug);
 
-    if unsafe { DEBUG } {
+    if *DEBUG.get().unwrap_or(&false) {
         for app in APP_LIFECYCLE_TIMEOUTS.keys() {
             for (key, value) in APP_LIFECYCLE_TIMEOUTS.get(app).unwrap() {
                 println!("{:<15} - {:<30} = {:>5}ms.", app, key, value);
@@ -141,12 +140,13 @@ pub fn http_download(url: String) -> Result<(), DabError> {
 
 pub fn http_post(json_string: String) -> Result<String, DabError> {
     let client = Client::new();
-    let rdk_address = format!("http://{}:9998/jsonrpc", unsafe { &DEVICE_ADDRESS });
+    let rdk_address = format!(
+        "http://{}:9998/jsonrpc",
+        DEVICE_ADDRESS.get().expect("init() not called")
+    );
 
-    unsafe {
-        if DEBUG {
-            println!("RDK request: {}", json_string);
-        }
+    if *DEBUG.get().unwrap_or(&false) {
+        println!("RDK request: {}", json_string);
     }
 
     let response = block_on(async {
@@ -170,10 +170,8 @@ pub fn http_post(json_string: String) -> Result<String, DabError> {
         Ok(r) => {
             let str = r.to_string();
 
-            unsafe {
-                if DEBUG {
-                    println!("RDK response: {}", str);
-                }
+            if *DEBUG.get().unwrap_or(&false) {
+                println!("RDK response: {}", str);
             }
 
             return Ok(str);
@@ -181,10 +179,8 @@ pub fn http_post(json_string: String) -> Result<String, DabError> {
         Err(err) => {
             let str = err.to_string();
 
-            unsafe {
-                if DEBUG {
-                    println!("RDK error: {}", str);
-                }
+            if *DEBUG.get().unwrap_or(&false) {
+                println!("RDK error: {}", str);
             }
 
             return Err(DabError::Err500(str));
@@ -193,7 +189,10 @@ pub fn http_post(json_string: String) -> Result<String, DabError> {
 }
 
 pub async fn ws_open() -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>, DabError> {
-    let rdk_address = format!("ws://{}:9998/jsonrpc", unsafe { &DEVICE_ADDRESS });
+    let rdk_address = format!(
+        "ws://{}:9998/jsonrpc",
+        DEVICE_ADDRESS.get().expect("init() not called")
+    );
     let url = Url::parse(&rdk_address).expect("Invalid WebSocket URL");
 
     connect_async(url)
@@ -621,7 +620,7 @@ pub fn get_rdk_device_info(propertyname: &str) -> Result<String, DabError> {
 }
 
 pub fn get_ip_address() -> String {
-    unsafe { DEVICE_ADDRESS.clone() }
+    DEVICE_ADDRESS.get().expect("init() not called").clone()
 }
 
 pub fn get_rdk_keys() -> Vec<String> {

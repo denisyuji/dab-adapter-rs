@@ -8,7 +8,7 @@ use crate::dab::structs::NetworkInterface;
 use crate::dab::structs::NetworkInterfaceType;
 use crate::device::rdk::interface::get_device_id;
 use crate::device::rdk::interface::http_post;
-use crate::device::rdk::interface::{deserialize_string_or_number, get_rdk_device_info, get_thunder_property};
+use crate::device::rdk::interface::{get_rdk_device_info, get_thunder_property};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
