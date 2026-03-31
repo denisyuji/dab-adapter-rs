@@ -1,3 +1,5 @@
+#![allow(static_mut_refs)]
+
 use crate::dab::structs::AudioOutputMode;
 use crate::dab::structs::AudioVolume;
 use crate::dab::structs::DabError;
