@@ -101,6 +101,13 @@ pub fn init(device_ip: &str, debug: bool) {
     }
 }
 
+pub fn is_local_device() -> bool {
+    match DEVICE_ADDRESS.get().map(|addr| addr.as_str()) {
+        Some("localhost") | Some("127.0.0.1") | Some("::1") => true,
+        _ => false,
+    }
+}
+
 lazy_static! {
     static ref RDK_DEVICE_ID: String = request_device_id().unwrap();
 }
