@@ -102,6 +102,13 @@ pub fn init(device_ip: &str, debug: bool) {
     }
 }
 
+pub fn is_local_device() -> bool {
+    // `DEVICE_ADDRESS` is a mutable static `String`, so treat it as a plain
+    // string slice here rather than using any container-style `get()`.
+    let addr = unsafe { DEVICE_ADDRESS.as_str() };
+    matches!(addr, "localhost" | "127.0.0.1" | "::1")
+}
+
 lazy_static! {
     static ref RDK_DEVICE_ID: String = request_device_id().unwrap();
 }
