@@ -1,3 +1,5 @@
+#![allow(static_mut_refs)]
+
 use crate::dab::structs::AudioOutputMode;
 use crate::dab::structs::AudioVolume;
 use crate::dab::structs::DabError;
@@ -102,10 +104,10 @@ pub fn init(device_ip: &str, debug: bool) {
 }
 
 pub fn is_local_device() -> bool {
-    match DEVICE_ADDRESS.get().map(|addr| addr.as_str()) {
-        Some("localhost") | Some("127.0.0.1") | Some("::1") => true,
-        _ => false,
-    }
+    // `DEVICE_ADDRESS` is a mutable static `String`, so treat it as a plain
+    // string slice here rather than using any container-style `get()`.
+    let addr = unsafe { DEVICE_ADDRESS.as_str() };
+    matches!(addr, "localhost" | "127.0.0.1" | "::1")
 }
 
 lazy_static! {

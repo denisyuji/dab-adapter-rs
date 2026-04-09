@@ -38,6 +38,7 @@ pub enum RequestTypes {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
+#[allow(dead_code)]
 pub struct Request {
     appId: Option<String>,
     force: Option<bool>,
@@ -60,6 +61,7 @@ pub struct DiscoveryResponse {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug, Default)]
+#[allow(dead_code)]
 pub struct DeviceTelemetryStartResponse {
     pub status: u16,
     pub duration: u64,
@@ -171,6 +173,7 @@ pub struct Version {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct StopApplicationTelemetryRequest {
     pub appId: String,
 }
@@ -178,11 +181,13 @@ pub struct StopApplicationTelemetryRequest {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct StopApplicationTelemetryResponse {}
 
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct StartApplicationTelemetryRequest {
     pub appId: String,
     pub duration: u64,
@@ -191,6 +196,7 @@ pub struct StartApplicationTelemetryRequest {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct StartApplicationTelemetryResponse {
     pub duration: u64,
 }
@@ -227,6 +233,7 @@ pub struct SendTextRequest {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct VoiceTextRequestResponse {}
 
 #[allow(non_snake_case)]
@@ -256,11 +263,13 @@ pub struct SendAudioRequest {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct VoiceRequestResponse {}
 
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct SettingsGetRequest {}
 
 #[allow(non_snake_case)]
@@ -444,6 +453,7 @@ pub struct LaunchApplicationWithContentRequest {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct LaunchApplicationWithContentResponse {}
 
 #[allow(non_snake_case)]
@@ -456,6 +466,7 @@ pub struct LaunchApplicationRequest {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct LaunchApplicationResponse {}
 
 #[allow(non_snake_case)]
@@ -553,16 +564,19 @@ pub struct StartDeviceTelemetryResponse {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct StopAppTelemetryRequest {}
 
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct StopAppTelemetryResponse {}
 
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct StartAppTelemetryRequest {
     pub app_id: String,
     pub duration: u64,
@@ -571,6 +585,7 @@ pub struct StartAppTelemetryRequest {
 #[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct StartAppTelemetryResponse {
     pub app_id: String,
     pub duration: u64,

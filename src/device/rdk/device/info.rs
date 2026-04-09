@@ -10,7 +10,6 @@ use crate::device::rdk::interface::get_device_id;
 use crate::device::rdk::interface::http_post;
 use crate::device::rdk::interface::{get_rdk_device_info, get_thunder_property};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 #[allow(non_snake_case)]
 #[allow(dead_code)]
