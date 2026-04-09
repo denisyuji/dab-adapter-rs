@@ -68,19 +68,23 @@ pub fn get_app_state(callsign: &str) -> Result<AppState, DabError> {
     struct State {
         callsign: String,
         state: String,
+        #[serde(default)]
         uri: String,
     }
 
     #[derive(Deserialize)]
     #[allow(dead_code)]
     struct GetState {
-        state: Vec<State>,
+        // Different RDKShell versions return either `result.state` or `result.runtimes`.
+        // Accept both so the adapter is portable across builds.
+        #[serde(default, alias = "state", alias = "runtimes")]
+        runtimes: Vec<State>,
         success: bool,
     }
 
     let rdkresponse: RdkResponse<GetState> = rdk_request("org.rdk.RDKShell.getState")?;
 
-    for item in rdkresponse.result.state {
+    for item in rdkresponse.result.runtimes {
         if item.callsign == callsign {
             match item.state.as_str() {
                 "suspended" => return Ok(AppState::Suspended),

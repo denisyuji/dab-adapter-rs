@@ -35,6 +35,7 @@ pub enum RequestTypes {
     VersionRequest,
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
 #[allow(dead_code)]
@@ -57,6 +58,7 @@ pub struct DiscoveryResponse {
     pub deviceId: String,
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[allow(dead_code)]
@@ -168,6 +170,7 @@ pub struct Version {
     pub versions: Vec<String>,
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
@@ -175,11 +178,13 @@ pub struct StopApplicationTelemetryRequest {
     pub appId: String,
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
 pub struct StopApplicationTelemetryResponse {}
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
@@ -188,6 +193,7 @@ pub struct StartApplicationTelemetryRequest {
     pub duration: u64,
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
@@ -224,6 +230,7 @@ pub struct SendTextRequest {
     pub voiceSystem: String,
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
@@ -253,11 +260,13 @@ pub struct SendAudioRequest {
     pub voiceSystem: String,
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
 pub struct VoiceRequestResponse {}
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
@@ -327,7 +336,7 @@ pub enum AudioOutputSource {
 }
 
 #[allow(dead_code)]
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub enum VideoInputSource {
     Tuner,
     HDMI1,
@@ -441,6 +450,7 @@ pub struct LaunchApplicationWithContentRequest {
     pub parameters: Option<Vec<String>>,
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
@@ -453,6 +463,7 @@ pub struct LaunchApplicationRequest {
     pub parameters: Option<Vec<String>>,
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
@@ -550,16 +561,19 @@ pub struct StartDeviceTelemetryResponse {
 }
 
 // Implement device-telemetry
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
 pub struct StopAppTelemetryRequest {}
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
 pub struct StopAppTelemetryResponse {}
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]
@@ -568,6 +582,7 @@ pub struct StartAppTelemetryRequest {
     pub duration: u64,
 }
 
+#[allow(dead_code)]
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
 #[allow(dead_code)]

@@ -242,7 +242,7 @@ pub fn move_to_front_set_focus(callsign: String) -> Result<String, DabError> {
     let request = RdkRequest {
         jsonrpc: "2.0".into(),
         id: 3,
-        method: "org.rdk.RDKShell.1.setFocus".into(),
+        method: "org.rdk.RDKShell.setFocus".into(),
         params: req_params.clone(),
     };
     let json_string = serde_json::to_string(&request).unwrap();
@@ -332,7 +332,7 @@ pub fn get_visibility(client: String) -> Result<bool, DabError> {
         ));
     }
 
-    Ok(rdkresponse.result.visible.is_some())
+    Ok(rdkresponse.result.visible.unwrap_or(false))
 }
 
 pub fn rdkshell_suspend(callsign:String) -> Result<String, DabError> {
@@ -398,9 +398,9 @@ pub fn wait_till_app_starts(req_params: String, app_created: bool) -> Result<(),
         app_state = get_dab_app_state(req_params.clone())?;
         if app_state == "FOREGROUND".to_string() {
             let timeout_type = if !app_created {
-                "cold_launch_timeout_ms"
-            } else {
                 "resume_launch_timeout_ms"
+            } else {
+                "cold_launch_timeout_ms"
             };
 
             let sleep_time = get_lifecycle_timeout(&req_params.to_lowercase(), timeout_type).unwrap_or(2500);

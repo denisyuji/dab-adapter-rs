@@ -8,6 +8,7 @@ use crate::dab::structs::GetSystemSettingsRequest;
 use crate::dab::structs::GetSystemSettingsResponse;
 use crate::dab::structs::HdrOutputMode;
 use crate::dab::structs::OutputResolution;
+use crate::dab::structs::VideoInputSource;
 use crate::device::rdk::interface::get_thunder_property;
 use crate::device::rdk::interface::rdk_request;
 use crate::device::rdk::interface::rdk_request_with_params;
@@ -15,7 +16,27 @@ use crate::device::rdk::interface::rdk_sound_mode_to_dab;
 use crate::device::rdk::interface::RdkResponse;
 use crate::hw_specific::interface::get_service_state;
 use crate::hw_specific::interface::service_activate;
+use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use std::sync::Mutex;
+
+lazy_static! {
+    static ref CURRENT_VIDEO_INPUT_SOURCE: Mutex<VideoInputSource> =
+        Mutex::new(VideoInputSource::Home);
+}
+
+pub fn set_current_video_input_source(source: VideoInputSource) {
+    if let Ok(mut current) = CURRENT_VIDEO_INPUT_SOURCE.lock() {
+        *current = source;
+    }
+}
+
+fn get_rdk_video_input_source() -> VideoInputSource {
+    CURRENT_VIDEO_INPUT_SOURCE
+        .lock()
+        .map(|g| g.clone())
+        .unwrap_or(VideoInputSource::Home)
+}
 
 pub fn get_rdk_language() -> Result<String, DabError> {
     let rdkresponse: RdkResponse<String> =
@@ -37,6 +58,24 @@ fn get_frequency_from_displayinfo_framerate(
         .replace("11988", "119.88");
 
     framerate.parse::<f32>()
+}
+
+/// Normalize platform framerate to DAB nominal value so set-then-get matches (e.g. 59.94 → 60).
+fn normalize_frequency_for_dab(frequency: f32) -> f32 {
+    const TOLERANCE: f32 = 0.1;
+    const NOMINAL: [(f32, f32); 5] = [
+        (23.976, 24.0),
+        (29.97, 30.0),
+        (47.952, 48.0),
+        (59.94, 60.0),
+        (119.88, 120.0),
+    ];
+    for (actual, nominal) in NOMINAL {
+        if (frequency - actual).abs() < TOLERANCE {
+            return nominal;
+        }
+    }
+    frequency
 }
 
 fn get_displaysettings_resolution_widthheight() -> Result<(u32, u32), DabError> {
@@ -72,6 +111,7 @@ fn get_rdk_video_resolution() -> Result<OutputResolution, DabError> {
     let displayinfo_framerate = get_thunder_property("DisplayInfo.framerate", "")?;
     let frequency = get_frequency_from_displayinfo_framerate(&displayinfo_framerate)
         .map_err(|_| DabError::Err400("Invalid framerate(parse to f32 failed)".to_string()))?;
+    let frequency = normalize_frequency_for_dab(frequency);
 
     Ok(OutputResolution {
         width,
@@ -311,6 +351,7 @@ pub fn process(_dab_request: GetSystemSettingsRequest) -> Result<String, DabErro
     response.hdrOutputMode = get_rdk_hdr_current_setting()?;
     response.audioOutputMode = get_rdk_audio_output_mode()?;
     response.audioOutputSource = get_rdk_connected_audio_source()?;
+    response.videoInputSource = get_rdk_video_input_source();
     response.lowLatencyMode = false;
     response.textToSpeech = get_rdk_tts()?;
 
