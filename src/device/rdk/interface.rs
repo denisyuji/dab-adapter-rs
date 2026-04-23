@@ -104,9 +104,7 @@ pub fn init(device_ip: &str, debug: bool) {
 }
 
 pub fn is_local_device() -> bool {
-    // `DEVICE_ADDRESS` is a mutable static `String`, so treat it as a plain
-    // string slice here rather than using any container-style `get()`.
-    let addr = unsafe { DEVICE_ADDRESS.as_str() };
+    let addr = DEVICE_ADDRESS.get().map(|s| s.as_str()).unwrap_or("");
     matches!(addr, "localhost" | "127.0.0.1" | "::1")
 }
 
