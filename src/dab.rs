@@ -3,7 +3,7 @@ pub mod device_telemetry;
 pub mod mqtt_client;
 pub mod structs;
 use crate::device::rdk as hw_specific;
-use mqtt_client::{MqttClient, MqttMessage};
+use mqtt_client::{MqttClient, MqttMessage, RecvError};
 use std::time::{SystemTime, UNIX_EPOCH};
 use structs::{
     DabError, DabResponse, DiscoveryResponse, ErrorResponse, Messages, NotificationLevel,
@@ -305,11 +305,9 @@ pub fn run(mqtt_server: String, mqtt_port: u16, mut function_map: SharedMap) {
                 };
                 println!("Publishing response: {} {}\n", response_topic.clone().replace(&substring, ""), limited_payload.as_str());
             }
-            Err(err) => {
-                if let Some(msg) = err {
-                    println!("Error: {}", msg);
-                }
-            }
+            Err(RecvError::Ignored) => {}
+            Err(RecvError::Disconnected) => mqtt_client.reconnect(),
+            Err(RecvError::Failed(msg)) => println!("Error: {}", msg),
         }
     }
 }
