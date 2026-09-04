@@ -118,6 +118,14 @@ pub fn main() {
         RequestTypes::SystemRestartRequest,
     );
     handlers.insert(
+        "system/power-mode/get".to_string(),
+        RequestTypes::SystemPowerModeGetRequest,
+    );
+    handlers.insert(
+        "system/power-mode/set".to_string(),
+        RequestTypes::SystemPowerModeSetRequest,
+    );
+    handlers.insert(
         "system/settings/list".to_string(),
         RequestTypes::SystemSettingsListRequest,
     );
