@@ -54,6 +54,21 @@ fn call_function(json_str: String, request_type: RequestTypes) -> Result<String,
                 serde_json::from_str(&json_str).map_err(|e| DabError::Err400(e.to_string()))?;
             hw_specific::system::restart::process(dab_request)
         }
+        RequestTypes::SystemPowerModeGetRequest => {
+            let dab_request: structs::GetPowerModeRequest =
+                serde_json::from_str(&json_str).map_err(|e| DabError::Err400(e.to_string()))?;
+            hw_specific::system::power_mode::get::process(dab_request)
+        }
+        RequestTypes::SystemPowerModeSetRequest => {
+            let dab_request: structs::SetPowerModeRequest =
+                serde_json::from_str(&json_str).map_err(|e| DabError::Err400(e.to_string()))?;
+            hw_specific::system::power_mode::set::process(dab_request)
+        }
+        RequestTypes::SystemFactoryResetRequest => {
+            let dab_request: structs::FactoryResetRequest =
+                serde_json::from_str(&json_str).map_err(|e| DabError::Err400(e.to_string()))?;
+            hw_specific::system::factory_reset::process(dab_request)
+        }
         RequestTypes::SystemSettingsListRequest => {
             let dab_request: structs::ListSystemSettingsRequest =
                 serde_json::from_str(&json_str).map_err(|e| DabError::Err400(e.to_string()))?;
