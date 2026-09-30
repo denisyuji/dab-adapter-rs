@@ -39,6 +39,9 @@ pub fn process(_dab_request: OperationsListRequest) -> Result<String, DabError> 
         .push("system/power-mode/set".to_string());
     ResponseOperator
         .operations
+        .push("system/factory-reset".to_string());
+    ResponseOperator
+        .operations
         .push("system/settings/list".to_string());
     ResponseOperator
         .operations

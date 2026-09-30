@@ -22,6 +22,7 @@ pub enum RequestTypes {
     SystemRestartRequest,
     SystemPowerModeGetRequest,
     SystemPowerModeSetRequest,
+    SystemFactoryResetRequest,
     SystemSettingsListRequest,
     SystemSettingsGetRequest,
     SystemSettingsSetRequest,
@@ -465,6 +466,14 @@ pub struct SetPowerModeRequest {
 pub struct SetPowerModeResponse {
     pub powerMode: PowerMode,
 }
+
+#[allow(non_snake_case)]
+#[derive(Default, Serialize, Deserialize)]
+pub struct FactoryResetRequest {}
+
+#[allow(non_snake_case)]
+#[derive(Default, Serialize, Deserialize)]
+pub struct FactoryResetResponse {}
 
 #[allow(non_snake_case)]
 #[derive(Default, Serialize, Deserialize)]
