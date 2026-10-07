@@ -345,6 +345,7 @@ pub enum VideoInputSource {
     HDMI4,
     Composite,
     Component,
+    USB,
     #[default]
     Home,
     Cast,
