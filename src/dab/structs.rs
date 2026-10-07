@@ -329,7 +329,7 @@ pub enum AudioOutputSource {
     EArc,
     Optical,
     Aux,
-    Bluetooth,
+    WirelessSpeakers,
     Auto,
     #[default]
     HDMI,
